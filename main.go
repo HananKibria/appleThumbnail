@@ -5,9 +5,13 @@ import (
 	"fmt"
 )
 
-func processHeifFile(this js.Value, p []js.Value) interface{} {
-	buffer := p[0]
-	libheifInstance := p[1]
+func processHeifFile(this js.Value, args []js.Value) interface{} {
+	buffer := args[0]
+	libheifInstance := args[1]
+	callback := js.FuncOf(func(this js.Value, callbackArgs []js.Value) interface{} {
+		// Handle callback arguments here if necessary
+		return nil
+	})
 
 	decoder := libheifInstance.Get("HeifDecoder").New()
 	image := decoder.Call("decode", buffer).Index(0)
@@ -16,6 +20,7 @@ func processHeifFile(this js.Value, p []js.Value) interface{} {
 	origHeight := image.Call("get_height").Int()
 
 	fmt.Printf("Original image size: %dx%d\n", origWidth, origHeight)
+	callback.Invoke(fmt.Sprintf("Original image size: %dx%d", origWidth, origHeight))
 
 	// Set maximum thumbnail size
 	maxSize := 150
@@ -31,11 +36,13 @@ func processHeifFile(this js.Value, p []js.Value) interface{} {
 	}
 
 	fmt.Printf("Thumbnail size: %dx%d\n", width, height)
+	callback.Invoke(fmt.Sprintf("Thumbnail size: %dx%d", width, height))
 
 	// Get the canvas and its 2D drawing context
 	canvas := js.Global().Get("document").Call("getElementById", "canvas")
 	if canvas.IsNull() {
 		fmt.Println("Canvas element not found")
+		callback.Invoke("Canvas element not found")
 		return nil
 	}
 	ctx := canvas.Call("getContext", "2d")
@@ -64,6 +71,9 @@ func processHeifFile(this js.Value, p []js.Value) interface{} {
 			// Now scale and draw the image from the offscreen canvas to the main canvas
 			ctx.Call("drawImage", offscreenCanvas, 0, 0, origWidth, origHeight, 0, 0, width, height)
 
+			// Notify that the drawing is complete
+			callback.Invoke("Image processing complete")
+
 			return nil
 		}))
 
@@ -74,6 +84,9 @@ func processHeifFile(this js.Value, p []js.Value) interface{} {
 }
 
 func main() {
+	c := make(chan struct{}, 0)
+
 	js.Global().Set("processHeifFile", js.FuncOf(processHeifFile))
-	select {}
+
+	<-c
 }
