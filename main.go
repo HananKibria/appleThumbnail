@@ -6,12 +6,10 @@ import (
 )
 
 func processHeifFile(this js.Value, args []js.Value) interface{} {
+	fmt.Println("processHeifFile called")
 	buffer := args[0]
 	libheifInstance := args[1]
-	callback := js.FuncOf(func(this js.Value, callbackArgs []js.Value) interface{} {
-		// Handle callback arguments here if necessary
-		return nil
-	})
+	callback := args[2]
 
 	decoder := libheifInstance.Get("HeifDecoder").New()
 	image := decoder.Call("decode", buffer).Index(0)
@@ -38,22 +36,11 @@ func processHeifFile(this js.Value, args []js.Value) interface{} {
 	fmt.Printf("Thumbnail size: %dx%d\n", width, height)
 	callback.Invoke(fmt.Sprintf("Thumbnail size: %dx%d", width, height))
 
-	// Get the canvas and its 2D drawing context
-	canvas := js.Global().Get("document").Call("getElementById", "canvas")
-	if canvas.IsNull() {
-		fmt.Println("Canvas element not found")
-		callback.Invoke("Canvas element not found")
-		return nil
-	}
-	ctx := canvas.Call("getContext", "2d")
-	canvas.Set("width", width)
-	canvas.Set("height", height)
-
-	// Create a temporary offscreen canvas to draw the full-size image
+	// Create a temporary offscreen canvas to draw the thumbnail
 	offscreenCanvas := js.Global().Get("document").Call("createElement", "canvas")
 	offscreenCtx := offscreenCanvas.Call("getContext", "2d")
-	offscreenCanvas.Set("width", origWidth)
-	offscreenCanvas.Set("height", origHeight)
+	offscreenCanvas.Set("width", width)
+	offscreenCanvas.Set("height", height)
 
 	// Convert the decoded image to ImageData
 	imageData := offscreenCtx.Call("createImageData", origWidth, origHeight)
@@ -66,13 +53,21 @@ func processHeifFile(this js.Value, args []js.Value) interface{} {
 			imageBitmap := args[0]
 
 			// Draw the ImageBitmap on the offscreen canvas
-			offscreenCtx.Call("drawImage", imageBitmap, 0, 0)
+			offscreenCtx.Call("drawImage", imageBitmap, 0, 0, origWidth, origHeight, 0, 0, width, height)
 
-			// Now scale and draw the image from the offscreen canvas to the main canvas
-			ctx.Call("drawImage", offscreenCanvas, 0, 0, origWidth, origHeight, 0, 0, width, height)
+			// Create a Blob from the offscreen canvas
+			offscreenCanvas.Call("toBlob", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+				blob := args[0]
 
-			// Notify that the drawing is complete
-			callback.Invoke("Image processing complete")
+				// Generate a URL for the Blob
+				url := js.Global().Get("URL").Call("createObjectURL", blob)
+
+				// Return the URL back to the JavaScript code
+				fmt.Println("Returning URL:", url.String())
+				callback.Invoke(url.String())
+
+				return nil
+			}), "image/png")
 
 			return nil
 		}))

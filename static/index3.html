@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIF File Processor</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".heif,.heic" multiple>
+    <div id="thumbnails"></div>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const files = event.target.files;
+            const thumbnailsContainer = document.getElementById('thumbnails');
+            thumbnailsContainer.innerHTML = ''; // Clear previous thumbnails
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    let libheifInstance = libheif; // Initialize your libheif instance here
+
+                    const startTime = performance.now();
+
+                    // Call the Go function
+                    processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(response) {
+                     
+
+                        // Check if the response is a URL or a print statement
+                        if (response.startsWith("blob:")) {
+                            const endTime = performance.now();
+                            const timeTaken = endTime - startTime;
+                            console.log(`Total time taken for ${file.name}: ${timeTaken} ms`);
+                            // Create an img element for the thumbnail
+                            const imgElement = document.createElement('img');
+                            imgElement.src = response;
+                            imgElement.alt = file.name;
+                            imgElement.onload = function() {
+                                console.log(`Image ${file.name} loaded successfully`);
+                            };
+                            imgElement.onerror = function() {
+                                console.error(`Failed to load image ${file.name}`);
+                            };
+                            thumbnailsContainer.appendChild(imgElement);
+                        } else {
+                            // Handle print statement
+                            console.log(response);
+                        }
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        });
+    </script>
+</body>
+</html>

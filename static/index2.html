@@ -1,0 +1,259 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go WebAssembly Example</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+
+    <input type="file" id="heifFileInput" />
+    <button id="processButton">Process HEIF File</button>
+    <canvas id="canvas"></canvas>
+    <img id="outputImage" />
+
+    <script>
+        let libheifInstance=libheif;
+        // Load the Go WebAssembly runtime and Wasm module
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+
+            // Now you can use the `processHeifFile` function
+            document.getElementById('processButton').addEventListener('click', () => {
+                const fileInput = document.getElementById('heifFileInput');
+                if (fileInput.files.length === 0) {
+                    alert("Please select a HEIF file.");
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                // Read the HEIF file as an ArrayBuffer
+                reader.onload = function(e) {
+                    const arrayBuffer = new Uint8Array(reader.result);
+
+                    // Load the libheif instance or some other external library as a mock object for this example
+                    // const libheifInstance = {
+                    //     HeifDecoder: function() {
+                    //         return {
+                    //             decode: function(buffer) {
+                    //                 // This should decode the buffer (mocked for now)
+                    //                 return [{ 
+                    //                     get_width: function() { return 800; },
+                    //                     get_height: function() { return 600; },
+                    //                     display: function(imageData, callback) {
+                    //                         // Mock callback, pass the imageData through
+                    //                         callback(imageData);
+                    //                     }
+                    //                 }];
+                    //             }
+                    //         };
+                    //     }
+                    // };
+
+                    // Call the Go function with the ArrayBuffer and libheif instance
+                    processHeifFile(arrayBuffer, libheifInstance, function(dataUrl) {
+                        // Display the resulting image data URL in an <img> element
+                        console.log("Processed image data URL:", dataUrl);
+                        const outputImage = document.getElementById("outputImage");
+                        outputImage.src = dataUrl;
+
+                        console.log("Processed image data URL:", dataUrl);
+                    });
+                };
+
+                reader.readAsArrayBuffer(file);
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIF File Processor</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".heif,.heic">
+    <img id="thumbnail" alt="Thumbnail will appear here">
+    <script>
+
+            // Load the Go WebAssembly runtime and Wasm module
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        })
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    let libheifInstance=libheif; // Initialize your libheif instance here
+
+                    // Call the Go function
+                    processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(url) {
+                        console.log("abc")
+                        console.log(url);
+                        // Set the image URL to the img element
+                        document.getElementById('thumbnail').src = url;
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIF File Processor</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".heif,.heic">
+    <img id="thumbnail" alt="Thumbnail will appear here">
+    <script>
+         const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        })
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    let libheifInstance=libheif; // Initialize alize your libheif instance here
+
+                    // Call the Go function
+                    processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(url) {
+                        console.log("Generated URL:", url);
+                        // Set the image URL to the img element
+                        const imgElement = document.getElementById('thumbnail');
+                        imgElement.src = url;
+                        imgElement.onload = function() {
+                            console.log("Image loaded successfully");
+                        };
+                        imgElement.onerror = function() {
+                            console.error("Failed to load image");
+                        };
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIF File Processor</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".heif,.heic">
+    <img id="thumbnail" alt="Thumbnail will appear here">
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    let libheifInstance = libheif; // Initialize your libheif instance here
+
+                    // Call the Go function
+                    processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(url) {
+                        console.log("Generated URL:", url);
+                        // Set the image URL to the img element
+                        const imgElement = document.getElementById('thumbnail');
+                        imgElement.src = url;
+                        imgElement.onload = function() {
+                            console.log("Image loaded successfully");
+                        };
+                        imgElement.onerror = function() {
+                            console.error("Failed to load image");
+                        };
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/gh/golang/go@go1.21.5/misc/wasm/wasm_exec.js"></script>
+    <script src="libheif.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIF File Processor</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".heif,.heic">
+    <img id="thumbnail" alt="Thumbnail will appear here">
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    let libheifInstance = libheif; // Initialize your libheif instance here
+
+                    // Call the Go function
+                    processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(response) {
+                        console.log("Response:", response);
+                        // Check if the response is a URL or a print statement
+                        if (response.startsWith("blob:")) {
+                            // Set the image URL to the img element
+                            const imgElement = document.getElementById('thumbnail');
+                            imgElement.src = response;
+                            imgElement.onload = function() {
+                                console.log("Image loaded successfully");
+                            };
+                            imgElement.onerror = function() {
+                                console.error("Failed to load image");
+                            };
+                        } else {
+                            // Handle print statement
+                            console.log(response);
+                        }
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    </script>
+</body>
+</html>
