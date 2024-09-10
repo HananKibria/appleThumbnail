@@ -59,12 +59,18 @@ func processHeifFile(this js.Value, args []js.Value) interface{} {
 			offscreenCanvas.Call("toBlob", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 				blob := args[0]
 
-				// Generate a URL for the Blob
-				url := js.Global().Get("URL").Call("createObjectURL", blob)
+				// Read the Blob as a base64-encoded data URL
+				reader := js.Global().Get("FileReader").New()
+				reader.Call("readAsDataURL", blob)
+				reader.Set("onloadend", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+					dataURL := reader.Get("result").String()
 
-				// Return the URL back to the JavaScript code
-				fmt.Println("Returning URL:", url.String())
-				callback.Invoke(url.String())
+					// Return the data URL back to the JavaScript code
+					fmt.Println("Returning data URL")
+					callback.Invoke(dataURL)
+
+					return nil
+				}))
 
 				return nil
 			}), "image/png")

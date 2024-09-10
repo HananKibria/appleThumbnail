@@ -34,7 +34,8 @@
                      
 
                         // Check if the response is a URL or a print statement
-                        if (response.startsWith("blob:")) {
+                        if (response.startsWith("data:image/png;base64,")) {
+                            console.log(response)
                             const endTime = performance.now();
                             const timeTaken = endTime - startTime;
                             console.log(`Total time taken for ${file.name}: ${timeTaken} ms`);

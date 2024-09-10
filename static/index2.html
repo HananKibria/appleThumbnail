@@ -235,7 +235,7 @@
                     processHeifFile(new Uint8Array(arrayBuffer), libheifInstance, function(response) {
                         console.log("Response:", response);
                         // Check if the response is a URL or a print statement
-                        if (response.startsWith("blob:")) {
+                        if (response.startsWith("data:image/png;base64,")) {
                             // Set the image URL to the img element
                             const imgElement = document.getElementById('thumbnail');
                             imgElement.src = response;
